@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PoKreGaM</title>
+<style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f0f0f0; }
+    header { background:#222; color:white; padding:10px 20px; display:flex; justify-content: space-between; align-items:center; }
+    #languageSelector { margin-right: 20px; }
+    nav button { background:none; border:none; color:white; margin: 0 5px; cursor:pointer; font-weight:bold; }
+    nav button:hover { text-decoration: underline; }
+    #authButtons button { margin-left: 10px; padding:5px 10px; background:#007bff; border:none; border-radius:5px; color:#fff; cursor:pointer; }
+    #authButtons button:hover { background:#0056b3; }
+    main { padding: 20px; max-width: 1100px; margin: auto; background: white; min-height: 80vh; box-sizing: border-box;}
+    .hidden { display:none; }
+    /* Avatars */
+    .avatars { display: flex; flex-wrap: wrap; gap:10px; margin-bottom: 15px; }
+    .avatar { border: 2px solid transparent; cursor: pointer; padding:5px; text-align:center; width: 100px; user-select:none;}
+    .avatar.selected { border-color: #007bff; background:#e0f0ff; }
+    .avatar img { width: 80px; height: 80px; object-fit: contain; }
+    /* Forms */
+    form input, form select, form textarea { padding: 6px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    form label { font-weight: bold; }
+    form .form-group { margin-bottom: 10px; }
+    /* Profile */
+    #profileHeader { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    #profileAvatar img { width: 120px; height: 120px; border-radius: 10px; }
+    #profileInfo { flex-grow: 1; min-width: 200px; }
+    #profileInfo h2 { margin: 0; }
+    #profileStats { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; }
+    #profileStats div { background: #eee; padding: 8px 12px; border-radius: 6px; min-width: 80px; text-align: center; user-select:none;}
+    /* Tabs */
+    #tabs { margin-bottom: 20px; display:flex; flex-wrap: wrap; gap: 5px; }
+    #tabs button { padding: 8px 16px; border: 1px solid #007bff; background: white; color: #007bff; cursor: pointer; border-radius: 5px; user-select:none; }
+    #tabs button.active, #tabs button:hover { background: #007bff; color: white; }
+    section.tabContent { display: none; }
+    section.tabContent.active { display: block; }
+    /* Ranking Table */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 8px; text-align: center; }
+    /* Friends */
+    #friendsList div { background: #eee; margin: 5px 0; padding: 6px 10px; border-radius: 5px; user-select:none;}
+    #activeFriends { font-style: italic; margin-top: 10px; }
+    /* Buttons */
+    button.primary { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; user-select:none;}
+    button.primary:hover { background: #0056b3; }
+    a.link { color:#007bff; cursor:pointer; text-decoration:underline; user-select:none; }
+    a.link:hover { color:#0056b3; }
+    /* Responsive */
+    @media (max-width:600px){
+        #profileHeader { flex-direction: column; align-items: flex-start;}
+        #profileStats { justify-content: flex-start;}
+    }
+
+    /* Styles for the new "All Chats" section */
+    .chat-container {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+    }
+    .chat-header {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .chat-message {
+        margin-bottom: 3px;
+        padding-left: 10px;
+        border-left: 3px solid #007bff;
+    }
+    .chat-message strong {
+        color: #555;
+    }
+    /* Styles for Posts section */
+    .post {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #fefefe;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .post-avatar img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+    .post-info {
+        flex-grow: 1;
+    }
+    .post-author {
+        font-weight: bold;
+        color: #333;
+    }
+    .post-time {
+        font-size: 0.8em;
+        color: #777;
+    }
+    .post-content {
+        margin-top: 10px;
+        color: #444;
+        white-space: pre-wrap; /* Preserve formatting */
+    }
+    /* Styles for Ranking type buttons */
+    #rankingTypeButtons {
+        margin-bottom: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: center; /* Center buttons */
+    }
+    #rankingTypeButtons button {
+        padding: 8px 15px;
+        border: 1px solid #007bff;
+        background: white;
+        color: #007bff;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    #rankingTypeButtons button.active,
+    #rankingTypeButtons button:hover {
+        background: #007bff;
+        color: white;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div>
+        <select id="languageSelector" aria-label="Language selector">
+            <option value="en">English</option>
+            <option value="hu">Magyar</option>
+            <option value="mk">Македонски</option>
+        </select>
+    </div>
+    <nav id="navMain">
+        <button id="navGames">Games</button>
+        <button id="navMarketplace">Marketplace</button>
+        <button id="navBuild">Build</button>
+        <button id="navNews">News</button>
+        <button id="navRanking">Ranking</button>
+    </nav>
+    <div id="authButtons">
+        <button id="btnLogin">Login</button>
+        <button id="btnSignUp">Sign Up</button>
+    </div>
+</header>
+
+<main>
+    <section id="loginSection" class="hidden">
+        <h2 id="loginTitle">Login</h2>
+        <form id="loginForm">
+            <label for="loginUsername">Username:</label>
+            <input type="text" id="loginUsername" required autocomplete="username" />
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" required autocomplete="current-password" />
+            <button type="submit" class="primary" id="loginSubmit">Login</button>
+            <p id="loginError" style="color:red;"></p>
+            <p><span class="link" id="toSignUp">Don't have an account? Sign Up</span></p>
+            <p><span class="link" id="forgotPasswordLink">Forgot password?</span></p>
+        </form>
+    </section>
+
+    <section id="signUpSection" class="hidden">
+        <h2 id="signUpTitle">Sign Up</h2>
+        <form id="signUpForm">
+            <p>Select your character:</p>
+            <div class="avatars" id="avatarsContainer">
+                </div>
+            <div class="form-group">
+                <label for="signUpUsername">Username:</label>
+                <input type="text" id="signUpUsername" required autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label for="signUpEmail">Email (optional):</label>
+                <input type="email" id="signUpEmail" autocomplete="email" />
+            </div>
+            <div class="form-group">
+                <label for="signUpCountry">Country:</label>
+                <select id="signUpCountry" required>
+                    <option value="">Select country</option>
+                    <option value="PL">Poland</option>
+                    <option value="HU">Hungary</option>
+                    <option value="MK">Macedonia</option>
+                    <option value="US">USA</option>
+                    <option value="DE">Germany</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="signUpPassword">Password:</label>
+                <input type="password" id="signUpPassword" required autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+                <label for="signUpBirthdate">Birthdate:</label>
+                <input type="date" id="signUpBirthdate" required />
+            </div>
+            <button type="submit" class="primary">Register</button>
+            <p id="signUpError" style="color:red;"></p>
+            <p><span class="link" id="toLogin">Already have an account? Login</span></p>
+        </form>
+    </section>
+
+    <section id="forgotPasswordSection" class="hidden">
+        <h2 id="forgotPasswordTitle">Forgot Password</h2>
+        <form id="forgotPasswordForm">
+            <p id="forgotPasswordInstructions">Please enter your email address. If an account is associated with it, we will send you your account details (username and password) via email.</p>
+            <p style="color: grey; font-size: 0.9em;">**Note: This is a simulation. In a real application, a password reset link would be sent for security.**</p>
+            <label for="forgotPasswordEmail">Email:</label>
+            <input type="email" id="forgotPasswordEmail" required autocomplete="email" />
+            <button type="submit" class="primary" id="sendRecoveryEmail">Send Recovery Email</button>
+            <p id="forgotPasswordMessage" style="color: green;"></p>
+            <p id="forgotPasswordError" style="color:red;"></p>
+            <p><span class="link" id="backToLoginFromForgot">Back to Login</span></p>
+        </form>
+    </section>
+
+
+    <section id="profileSection" class="hidden" tabindex="0">
+        <div id="profileHeader">
+            <div id="profileAvatar"><img src="" alt="User avatar" /></div>
+            <div id="profileInfo">
+                <h2 id="profileUsername"></h2>
+                <p id="profileCountry"></p>
+                <p><strong>Ranking XP place:</strong> <span id="profileRankingPlace"></span></p>
+                <div id="profileStats">
+                    <div>XP: <span id="profileXP"></span></div>
+                    <div>Friends: <span id="profileFriendsCount"></span></div>
+                    <div>Gold: <span id="profileGold"></span></div>
+                    <div>Level: <span id="profileLevel"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabs" role="tablist" aria-label="Profile sections">
+            <button role="tab" data-tab="gamesTab" class="active" aria-selected="true">Games</button>
+            <button role="tab" data-tab="marketplaceTab" aria-selected="false">Marketplace</button>
+            <button role="tab" data-tab="buildTab" aria-selected="false">Build</button>
+            <button role="tab" data-tab="newGameTab" aria-selected="false">New Game</button>
+            <button role="tab" data-tab="newsTab" aria-selected="false">News</button>
+            <button role="tab" data-tab="rankingTab" aria-selected="false">Ranking</button>
+            <button role="tab" data-tab="postsTab" aria-selected="false">Posts</button>
+            <button id="checkThisBtn" class="hidden" style="margin-left: 10px; background:#28a745; color:white; border:none; padding: 8px 12px; border-radius: 6px; cursor:pointer;">Check this</button>
+            <button id="btnLogout" style="margin-left:auto; background:#dc3545; color:white; border:none; padding: 8px 12px; border-radius: 6px; cursor:pointer;">Logout</button>
+        </div>
+
+        <section id="gamesTab" class="tabContent active" role="tabpanel" tabindex="0">
+            <h3>Games</h3>
+            <p>Welcome to your games area! Here you can start or continue your games.</p>
+            <button id="startGameBtn" class="primary">Start New Game</button>
+            <p style="margin-top:20px;">*Simulated XP gain: Click "Start New Game" to gain XP for weekly, monthly, and yearly rankings!</p>
+        </section>
+
+        <section id="marketplaceTab" class="tabContent" role="tabpanel" tabindex="0">
+            <h3>Marketplace</h3>
+            <p>Buy and sell items here.</p>
+            <p><em>Marketplace is under construction.</em></p>
+        </section>
+
+        <section id="buildTab" class="tabContent" role="tabpanel" tabindex="0">
+            <h3>Build</h3>
+            <p>Create and customize your in-game world.</p>
+            <p><em>Build section is under construction.</em></p>
+        </section>
+
+        <section id="newGameTab" class="tabContent" role="tabpanel" tabindex="0">
+            <h3>New Game</h3>
+            <p>Create a new game or tournament here.</p>
+            <p><em>Feature coming soon.</em></p>
+        </section>
+
+        <section id="newsTab" class="tabContent" role="tabpanel" tabindex="0">
+            <h3>News</h3>
+            <p>Latest news and updates.</p>
+            <p><em>No news at the moment.</em></p>
+        </section>
+
+        <section id="rankingTab" class="tabContent" role="tabpanel" tabindex="0">
+            <h3 id="rankingTabTitle">Ranking</h3>
+            <div id="rankingTypeButtons">
+                <button data-ranking-type="overall" class="active">Overall Ranking</button>
+                <button data-ranking-type="weekly">Weekly Ranking</button>
+                <button data-ranking-type="monthly">Monthly Ranking</button>
+                <button data-ranking-type="yearly">Yearly Ranking</button>
+                <button data-ranking-type="global">Global Ranking (by country)</button>
+            </div>
+            <table id="rankingTable" aria-label="User ranking table">
+                <thead>
+                    <tr>
+                        <th>Place</th><th>Username</th><th>XP</th><th>Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </section>
+
+        <section id="postsTab" class="tabContent" role="tabpanel" tabindex="0">
+            <h3 id="postsTabTitle">Community Posts</h3>
+            <div class="form-group">
+                <label for="postContent" id="writePostLabel">Write your post:</label>
+                <textarea id="postContent" rows="5" placeholder="What's on your mind?"></textarea>
+                <button type="button" class="primary" id="publishPostBtn">Publish Post</button>
+                <p id="postMessage" style="color:green; margin-top:10px;"></p>
+            </div>
+            <div id="communityPosts" style="margin-top: 20px;">
+                </div>
+        </section>
+
+    </section>
+
+    <section id="allChatsSection" class="hidden">
+        <h2>All Private Chats & Game Chats (Guest Access)</h2>
+        <p>This content is only visible to "guest" users logged in with the "Freeaccount" password.</p>
+        <div id="chatsContent">
+            </div>
+    </section>
+
+</main>
+
+<script>
+(() => {
+    // --- Data and state ---
+    const LANG = {
+        en: {
+            login: "Login",
+            signup: "Sign Up",
+            username: "Username",
+            password: "Password",
+            email: "Email (optional)",
+            country: "Country",
+            birthdate: "Birthdate",
+            selectCharacter: "Select your character:",
+            dontHaveAccount: "Don't have an account? Sign Up",
+            alreadyHaveAccount: "Already have an account? Login",
+            rankingXPPlace: "Ranking XP place:",
+            games: "Games",
+            marketplace: "Marketplace",
+            build: "Build",
+            newGame: "New Game",
+            news: "News",
+            ranking: "Ranking",
+            posts: "Posts",
+            startNewGame: "Start New Game",
+            loginError: "Wrong username or password.",
+            signUpError: "Please fill all required fields and select a character.",
+            logout: "Logout",
+            checkThis: "Check this",
+            allChatsTitle: "All Private Chats & Game Chats (Guest Access)",
+            allChatsDescription: "This content is only visible to 'guest' users logged in with the 'Freeaccount' password.",
+            forgotPassword: "Forgot password?",
+            forgotPasswordTitle: "Forgot Password",
+            forgotPasswordInstructions: "Please enter your email address. If an account is associated with it, we will send you your account details (username and password) via email.",
+            sendRecoveryEmail: "Send Recovery Email",
+            backToLogin: "Back to Login",
+            recoveryEmailSent: "If an account with this email exists, your account details (username: {username}, password: {password}) have been sent to your email. (Simulation)",
+            recoveryEmailNotFound: "No account found with that email or no email provided for the account. Please check your email or try signing up.",
+            postsTabTitle: "Community Posts",
+            writePostLabel: "Write your post:",
+            publishPostBtn: "Publish Post",
+            postContentPlaceholder: "What's on your mind?",
+            postPublished: "Post published successfully!",
+            postEmpty: "Post cannot be empty.",
+            overallRanking: "Overall Ranking", // UPDATED: Was dailyRanking
+            weeklyRanking: "Weekly Ranking",
+            monthlyRanking: "Monthly Ranking",
+            yearlyRanking: "Yearly Ranking",
+            globalRankingCountry: "Global Ranking (by country)",
+            rankingTabTitle: "XP Ranking",
+        },
+        hu: {
+            login: "Bejelentkezés",
+            signup: "Regisztráció",
+            username: "Felhasználónév",
+            password: "Jelszó",
+            email: "Email (opcionális)",
+            country: "Ország",
+            birthdate: "Születési dátum",
+            selectCharacter: "Válaszd ki a karaktered:",
+            dontHaveAccount: "Nincs még fiókod? Regisztrálj",
+            alreadyHaveAccount: "Már van fiókod? Jelentkezz be",
+            rankingXPPlace: "XP helyezés a ranglistán:",
+            games: "Játékok",
+            marketplace: "Piac",
+            build: "Építés",
+            newGame: "Új játék",
+            news: "Hírek",
+            ranking: "Ranglista",
+            posts: "Bejegyzések",
+            startNewGame: "Új játék indítása",
+            loginError: "Hibás felhasználónév vagy jelszó.",
+            signUpError: "Töltsd ki a kötelező mezőket és válassz karaktert.",
+            logout: "Kijelentkezés",
+            checkThis: "Nézd meg",
+            allChatsTitle: "Összes privát chat és játék chat (Vendég hozzáférés)",
+            allChatsDescription: "Ez a tartalom csak a 'vendég' felhasználóknak látható, akik 'Freeaccount' jelszóval jelentkeztek be.",
+            forgotPassword: "Elfelejtett jelszó?",
+            forgotPasswordTitle: "Elfelejtett jelszó",
+            forgotPasswordInstructions: "Kérjük, add meg az e-mail címed. Ha tartozik hozzá fiók, elküldjük fiókadataidat (felhasználónév és jelszó) e-mailben.",
+            sendRecoveryEmail: "Jelszó-helyreállító e-mail küldése",
+            backToLogin: "Vissza a bejelentkezéshez",
+            recoveryEmailSent: "Ha létezik fiók ezzel az e-mail címmel, fiókadataid (felhasználónév: {username}, jelszó: {password}) elküldtük az e-mail címedre. (Szimuláció)",
+            recoveryEmailNotFound: "Nincs fiók ehhez az e-mail címhez, vagy nincs e-mail megadva a fiókhoz. Kérjük, ellenőrizd az e-mailedet, vagy próbáld meg regisztrálni.",
+            postsTabTitle: "Közösségi bejegyzések",
+            writePostLabel: "Írd meg bejegyzésedet:",
+            publishPostBtn: "Bejegyzés közzététele",
+            postContentPlaceholder: "Mire gondolsz?",
+            postPublished: "Bejegyzés sikeresen közzétéve!",
+            postEmpty: "A bejegyzés nem lehet üres.",
+            overallRanking: "Összes ranglista", // UPDATED
+            weeklyRanking: "Heti ranglista",
+            monthlyRanking: "Havi ranglista",
+            yearlyRanking: "Éves ranglista",
+            globalRankingCountry: "Globális ranglista (ország szerint)",
+            rankingTabTitle: "XP Ranglista",
+        },
+        mk: {
+            login: "Најава",
+            signup: "Регистрација",
+            username: "Корисничко име",
+            password: "Лозинка",
+            email: "Е-пошта (опционално)",
+            country: "Држава",
+            birthdate: "Датум на раѓање",
+            selectCharacter: "Избери го својот карактер:",
+            dontHaveAccount: "Немате сметка? Регистрирајте се",
+            alreadyHaveAccount: "Веќе имате сметка? Најавете се",
+            rankingXPPlace: "Место на ранг листата по XP:",
+            games: "Игри",
+            marketplace: "Пазар",
+            build: "Изградба",
+            newGame: "Нова игра",
+            news: "Вести",
+            ranking: "Ранг листа",
+            posts: "Објави",
+            startNewGame: "Започни нова игра",
+            loginError: "Погрешно корисничко име или лозинка.",
+            signUpError: "Ве молиме пополнете ги сите задолжителни полиња и изберете карактер.",
+            logout: "Одјави се",
+            checkThis: "Провери го ова",
+            allChatsTitle: "Сите приватни разговори и разговори од игри (Гостински пристап)",
+            allChatsDescription: "Оваа содржина е видлива само за 'гостин' корисници најавени со лозинката 'Freeaccount'.",
+            forgotPassword: "Заборавена лозинка?",
+            forgotPasswordTitle: "Заборавена лозинка",
+            forgotPasswordInstructions: "Ве молиме внесете ја вашата е-пошта. Доколку постои сметка поврзана со неа, ќе ви ги испратиме деталите за вашата сметка (корисничко име и лозинка) по е-пошта.",
+            sendRecoveryEmail: "Испрати е-пошта за обнова",
+            backToLogin: "Назад на Најава",
+            recoveryEmailSent: "Доколку постои сметка со оваа е-пошта, деталите за вашата сметка (корисничко име: {username}, лозинка: {password}) се испратени на вашата е-пошта. (Симулација)",
+            recoveryEmailNotFound: "Не е пронајдена сметка со таа е-пошта или не е обезбедена е-пошта за сметката. Ве молиме проверете ја вашата е-пошта или обидете се да се регистрирате.",
+            postsTabTitle: "Објави на заедницата",
+            writePostLabel: "Напиши ја вашата објава:",
+            publishPostBtn: "Објави",
+            postContentPlaceholder: "Што ви е на ум?",
+            postPublished: "Објавата е успешно објавена!",
+            postEmpty: "Објавата не може да биде празна.",
+            overallRanking: "Вкупна ранг листа", // UPDATED
+            weeklyRanking: "Неделна ранг листа",
+            monthlyRanking: "Месечна ранг листа",
+            yearlyRanking: "Годишна ранг листа",
+            globalRankingCountry: "Глобална ранг листа (по држава)",
+            rankingTabTitle: "XP Ранг листа",
+        }
+    };
+
+    // --- Avatars for signup ---
+    const avatars = [
+        {id: 'avatar1', name: 'Smily Boy', src: 'https://ibb.co/C5ySrZzP'},
+        {id: 'avatar2', name: 'Warrior Girl', src: 'https://ibb.co/3yNd15NS'},
+        {id: 'avatar3', name: 'Zebra', src: 'https://ibb.co/bR89gQKn'},
+        {id: 'avatar4', name: 'King Of Water', src: 'https://ibb.co/0R3j57KN'},
+    ];
+
+    // --- Simulate Chat Data (for guest access) ---
+    const allChats = [
+        {
+            type: 'private',
+            participants: ['UserA', 'UserB'],
+            messages: [
+                { sender: 'UserA', text: 'Hey, spotkałeś się z tą nową misją?', time: '10:05' },
+                { sender: 'UserB', text: 'Tak, jest super trudna! Potrzebuję pomocy.', time: '10:07' },
+                { sender: 'UserA', text: 'Jasne, mogę pomóc wieczorem.', time: '10:08' }
+            ]
+        },
+        {
+            type: 'game',
+            game: 'Dragon Slayer',
+            messages: [
+                { sender: 'Player1', text: 'Ktoś na raidzie o 20:00?', time: '11:15' },
+                { sender: 'Player2', text: 'Ja będę!', time: '11:16' },
+                { sender: 'Player1', text: 'Ok, zbieramy ekipę!', time: '11:17' }
+            ]
+        },
+        {
+            type: 'private',
+            participants: ['GraczX', 'GraczY'],
+            messages: [
+                { sender: 'GraczX', text: 'Widziałeś ten nowy item?', time: '12:01' },
+                { sender: 'GraczY', text: 'O tak, jest niesamowity! Ale drogi...', time: '12:03' }
+            ]
+        },
+        {
+            type: 'game',
+            game: 'PoKreGaM Football',
+            messages: [
+                { sender: 'Fanatik', text: 'GOOOOOOL!!!', time: '13:30' },
+                { sender: 'Rywal', text: 'Foul! To był faul!', time: '13:31' },
+                { sender: 'Fanatik', text: 'Sędzia puścił, gramy dalej!', time: '13:32' }
+            ]
+        },
+        {
+            type: 'private',
+            participants: ['Admin', 'SupportUser'],
+            messages: [
+                { sender: 'Admin', text: 'Problem z serwerem rozwiązany.', time: '14:00' },
+                { sender: 'SupportUser', text: 'Dzięki za szybką naprawę!', time: '14:01' }
+            ]
+        }
+    ];
+
+    // Users data (simulate DB) in localStorage key 'PoKreGaM_users'
+    // Logged in user key 'PoKreGaM_currentUser'
+    // Posts data in localStorage key 'PoKreGaM_posts'
+    // Ranking reset dates key 'PoKreGaM_lastResetDates'
+
+    // --- Helper functions ---
+    const $ = (id) => document.getElementById(id);
+    const show = (el) => el.classList.remove('hidden');
+    const hide = (el) => el.classList.add('hidden');
+    const sanitize = (str) => String(str).replace(/[<>]/g, '');
+
+    let currentLang = 'en'; // Default language
+
+    // Translate all visible UI texts based on selected language
+    function translateUI(lang) {
+        currentLang = lang; // Update currentLang
+        const t = LANG[lang];
+        // Header buttons
+        $('navMain').querySelectorAll('button').forEach((btn) => {
+            const map = {
+                navGames: t.games,
+                navMarketplace: t.marketplace,
+                navBuild: t.build,
+                navNews: t.news,
+                navRanking: t.ranking,
+            };
+            if (btn.id in map) btn.textContent = map[btn.id];
+        });
+        // Auth buttons
+        $('btnLogin').textContent = t.login;
+        $('btnSignUp').textContent = t.signup;
+        // Login form
+        $('loginTitle').textContent = t.login;
+        $('loginForm').querySelector('label[for="loginUsername"]').textContent = t.username + ":";
+        $('loginForm').querySelector('label[for="loginPassword"]').textContent = t.password + ":";
+        $('loginSubmit').textContent = t.login;
+        $('loginError').textContent = "";
+        $('toSignUp').textContent = t.dontHaveAccount;
+        $('forgotPasswordLink').textContent = t.forgotPassword;
+
+        // Signup form
+        $('signUpTitle').textContent = t.signup;
+        $('signUpForm').querySelector('p').textContent = t.selectCharacter;
+        $('signUpForm').querySelector('label[for="signUpUsername"]').textContent = t.username + ":";
+        $('signUpForm').querySelector('label[for="signUpEmail"]').textContent = t.email + ":";
+        $('signUpForm').querySelector('label[for="signUpCountry"]').textContent = t.country + ":";
+        $('signUpForm').querySelector('label[for="signUpPassword"]').textContent = t.password + ":";
+        $('signUpForm').querySelector('label[for="signUpBirthdate"]').textContent = t.birthdate + ":";
+        $('signUpError').textContent = "";
+        $('toLogin').textContent = t.alreadyHaveAccount;
+
+        // Forgot Password form
+        $('forgotPasswordTitle').textContent = t.forgotPasswordTitle;
+        $('forgotPasswordInstructions').textContent = t.forgotPasswordInstructions;
+        $('forgotPasswordForm').querySelector('label[for="forgotPasswordEmail"]').textContent = t.email + ":";
+        $('sendRecoveryEmail').textContent = t.sendRecoveryEmail;
+        $('backToLoginFromForgot').textContent = t.backToLogin;
+        $('forgotPasswordMessage').textContent = "";
+        $('forgotPasswordError').textContent = "";
+
+
+        // Profile tabs
+        const tabs = $('tabs').querySelectorAll('button');
+        const tabTextsMap = {
+            'gamesTab': t.games,
+            'marketplaceTab': t.marketplace,
+            'buildTab': t.build,
+            'newGameTab': t.newGame,
+            'newsTab': t.news,
+            'rankingTab': t.ranking,
+            'postsTab': t.posts
+        };
+        tabs.forEach((btn) => {
+            const dataTab = btn.dataset.tab;
+            if (dataTab && tabTextsMap[dataTab]) {
+                btn.textContent = tabTextsMap[dataTab];
+            }
+        });
+        $('btnLogout').textContent = t.logout;
+        $('checkThisBtn').textContent = t.checkThis;
+
+        // Profile section info
+        $('profileRankingPlace').previousSibling.textContent = t.rankingXPPlace + " ";
+        $('startGameBtn').textContent = t.startNewGame;
+
+        // Ranking tab title and buttons (UPDATED)
+        $('rankingTabTitle').textContent = t.ranking;
+        $('rankingTypeButtons').querySelector('[data-ranking-type="overall"]').textContent = t.overallRanking; // UPDATED
+        $('rankingTypeButtons').querySelector('[data-ranking-type="weekly"]').textContent = t.weeklyRanking;
+        $('rankingTypeButtons').querySelector('[data-ranking-type="monthly"]').textContent = t.monthlyRanking;
+        $('rankingTypeButtons').querySelector('[data-ranking-type="yearly"]').textContent = t.yearlyRanking;
+        $('rankingTypeButtons').querySelector('[data-ranking-type="global"]').textContent = t.globalRankingCountry;
+
+
+        // Ranking table headers
+        const headers = $('rankingTable').querySelectorAll('th');
+        headers[0].textContent = "Place";
+        headers[1].textContent = t.username;
+        headers[2].textContent = "XP";
+        headers[3].textContent = "Level";
+
+        // All Chats Section
+        $('allChatsSection').querySelector('h2').textContent = t.allChatsTitle;
+        $('allChatsSection').querySelector('p').textContent = t.allChatsDescription;
+
+        // Posts Tab
+        $('postsTabTitle').textContent = t.postsTabTitle;
+        $('writePostLabel').textContent = t.writePostLabel;
+        $('postContent').placeholder = t.postContentPlaceholder;
+        $('publishPostBtn').textContent = t.publishPostBtn;
+        $('postMessage').textContent = ''; // Clear message
+    }
+
+    // --- Avatar selection for sign up ---
+    function renderAvatars() {
+        const container = $('avatarsContainer');
+        container.innerHTML = '';
+        avatars.forEach(a => {
+            const div = document.createElement('div');
+            div.className = 'avatar';
+            div.tabIndex = 0;
+            div.dataset.avatarId = a.id;
+            div.title = a.name;
+            div.innerHTML = `<img src="${a.src}" alt="${a.name}"/><br>${a.name}`;
+            container.appendChild(div);
+        });
+    }
+
+    // --- LocalStorage user handling ---
+    function getUsers() {
+        let users = JSON.parse(localStorage.getItem('PoKreGaM_users') || '[]');
+        // Ensure new XP fields and lastResetDates are initialized for existing and new users
+        // Removed xpDaily from here as it's no longer used
+        const defaultXP = { xp: 0, xpWeekly: 0, xpMonthly: 0, xpYearly: 0 };
+        const defaultUserProperties = {
+            email: '',
+            country: 'PL', // Default country
+            birthdate: '2000-01-01',
+            avatarId: 'avatar1',
+            avatarName: 'Knight',
+            gold: 0,
+            friends: [],
+            ...defaultXP,
+            lastWeeklyReset: new Date(0).toISOString(),
+            lastMonthlyReset: new Date(0).toISOString(),
+            lastYearlyReset: new Date(0).toISOString(),
+        };
+
+        let updatedUsers = false;
+        users = users.map(user => {
+            const newUser = { ...defaultUserProperties, ...user };
+            // Ensure legacy users have new XP fields (excluding xpDaily now)
+            if (user.xpWeekly === undefined) { // Check for one of the new fields to decide if old structure
+                Object.assign(newUser, defaultXP);
+                updatedUsers = true;
+            }
+            // Ensure legacy users have reset tracking dates (excluding lastDailyReset)
+            if (user.lastWeeklyReset === undefined) {
+                Object.assign(newUser, {
+                    lastWeeklyReset: new Date(0).toISOString(),
+                    lastMonthlyReset: new Date(0).toISOString(),
+                    lastYearlyReset: new Date(0).toISOString(),
+                });
+                updatedUsers = true;
+            }
+            // If xpDaily exists from previous version, remove it
+            if (newUser.xpDaily !== undefined) {
+                delete newUser.xpDaily;
+                updatedUsers = true;
+            }
+            if (newUser.lastDailyReset !== undefined) {
+                delete newUser.lastDailyReset;
+                updatedUsers = true;
+            }
+            return newUser;
+        });
+
+
+        // Ensure "guest" account exists for demonstration and has all new fields
+        if (!users.some(u => u.username === 'guest')) {
+            users.push({
+                username: 'guest',
+                password: 'Freeaccount',
+                ...defaultUserProperties,
+            });
+            updatedUsers = true;
+        }
+
+        // Add a sample user with email for recovery demo and ranking demo
+        if (!users.some(u => u.username === 'testuser')) {
+             users.push({
+                username: 'testuser',
+                email: 'test@example.com',
+                country: 'US',
+                password: 'testpassword',
+                birthdate: '1990-05-15',
+                avatarId: 'avatar2',
+                avatarName: 'Mage',
+                xp: 150,
+                xpWeekly: 50,
+                xpMonthly: 100,
+                xpYearly: 150,
+                gold: 50,
+                friends: [],
+                lastWeeklyReset: getKiritimatiDate().toISOString(), // Set current date to avoid immediate reset
+                lastMonthlyReset: getKiritimatiDate().toISOString(),
+                lastYearlyReset: getKiritimatiDate().toISOString(),
+            });
+            updatedUsers = true;
+        }
+        if (!users.some(u => u.username === 'playerPL')) {
+            users.push({
+                username: 'playerPL',
+                email: 'playerPL@example.com',
+                country: 'PL',
+                password: 'password',
+                birthdate: '1995-01-01',
+                avatarId: 'avatar3',
+                avatarName: 'Archer',
+                xp: 200,
+                xpWeekly: 70,
+                xpMonthly: 120,
+                xpYearly: 200,
+                gold: 70,
+                friends: [],
+                lastWeeklyReset: getKiritimatiDate().toISOString(),
+                lastMonthlyReset: getKiritimatiDate().toISOString(),
+                lastYearlyReset: getKiritimatiDate().toISOString(),
+            });
+            updatedUsers = true;
+        }
+
+
+        if (updatedUsers) {
+            localStorage.setItem('PoKreGaM_users', JSON.stringify(users));
+        }
+        return users;
+    }
+    function saveUsers(users) {
+        localStorage.setItem('PoKreGaM_users', JSON.stringify(users));
+    }
+    function getCurrentUser() {
+        const username = localStorage.getItem('PoKreGaM_currentUser');
+        if(!username) return null;
+        const users = getUsers();
+        return users.find(u => u.username === username) || null;
+    }
+    function setCurrentUser(username) {
+        if(username) localStorage.setItem('PoKreGaM_currentUser', username);
+        else localStorage.removeItem('PoKreGaM_currentUser');
+    }
+
+    // --- LocalStorage posts handling ---
+    function getPosts() {
+        return JSON.parse(localStorage.getItem('PoKreGaM_posts') || '[]');
+    }
+
+    function savePosts(posts) {
+        localStorage.setItem('PoKreGaM_posts', JSON.stringify(posts));
+    }
+
+    // --- Utilities ---
+    function calculateLevel(xp) {
+        return Math.floor(Math.sqrt(xp/10)) + 1;
+    }
+
+    // --- Kiritimati Time (UTC+14) Helpers ---
+    function getKiritimatiDate() {
+        const now = new Date();
+        const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000); // Convert local time to UTC
+        const kiritimatiTime = new Date(utcNow.getTime() + (14 * 3600 * 1000)); // Add 14 hours for UTC+14
+        return kiritimatiTime;
+    }
+
+    function getKiritimatiDateComponents(dateObj) {
+        const year = dateObj.getUTCFullYear();
+        const month = dateObj.getUTCMonth(); // 0-11
+        const day = dateObj.getUTCDate();
+        const dayOfWeek = dateObj.getUTCDay(); // 0=Sunday, 6=Saturday
+
+        // Calculate start of week (Monday in UTC+14)
+        const startOfWeek = new Date(dateObj);
+        const dayOffset = startOfWeek.getUTCDay(); // 0 (Sunday) to 6 (Saturday)
+        const daysToMonday = (dayOffset === 0) ? 6 : dayOffset - 1; // Days to subtract to get to Monday
+        startOfWeek.setUTCDate(startOfWeek.getUTCDate() - daysToMonday);
+        startOfWeek.setUTCHours(0, 0, 0, 0); // Normalize to start of Monday
+
+        return {
+            year: year,
+            month: month,
+            day: day,
+            startOfWeekISO: startOfWeek.toISOString().split('T')[0] // YYYY-MM-DD of Monday
+        };
+    }
+
+    // --- Ranking Reset Logic (UPDATED) ---
+    function handleRankingResets() {
+        let resetDates = JSON.parse(localStorage.getItem('PoKreGaM_lastResetDates') || '{}');
+        const users = getUsers();
+        let changed = false;
+
+        const kiritimatiNow = getKiritimatiDate();
+        const currentComponents = getKiritimatiDateComponents(kiritimatiNow);
+
+        const nowISO = kiritimatiNow.toISOString();
+
+        // Initialize resetDates if they don't exist or are older than epoch (excluding daily)
+        if (!resetDates.weekly || new Date(resetDates.weekly).getTime() === new Date(0).getTime()) {
+            resetDates.weekly = nowISO;
+            changed = true;
+        }
+        if (!resetDates.monthly || new Date(resetDates.monthly).getTime() === new Date(0).getTime()) {
+            resetDates.monthly = nowISO;
+            changed = true;
+        }
+        if (!resetDates.yearly || new Date(resetDates.yearly).getTime() === new Date(0).getTime()) {
+            resetDates.yearly = nowISO;
+            changed = true;
+        }
+
+        // --- No Daily Reset anymore ---
+
+        // Weekly Reset
+        const lastWeeklyResetDate = new Date(resetDates.weekly);
+        const lastWeeklyComponents = getKiritimatiDateComponents(lastWeeklyResetDate);
+        if (lastWeeklyComponents.startOfWeekISO !== currentComponents.startOfWeekISO) {
+            users.forEach(user => user.xpWeekly = 0);
+            resetDates.weekly = nowISO;
+            changed = true;
+        }
+
+        // Monthly Reset
+        const lastMonthlyResetDate = new Date(resetDates.monthly);
+        const lastMonthlyComponents = getKiritimatiDateComponents(lastMonthlyResetDate);
+        if (lastMonthlyComponents.year !== currentComponents.year ||
+            lastMonthlyComponents.month !== currentComponents.month) {
+            users.forEach(user => user.xpMonthly = 0);
+            resetDates.monthly = nowISO;
+            changed = true;
+        }
+
+        // Yearly Reset
+        const lastYearlyResetDate = new Date(resetDates.yearly);
+        const lastYearlyComponents = getKiritimatiDateComponents(lastYearlyResetDate);
+        if (lastYearlyComponents.year !== currentComponents.year) {
+            users.forEach(user => user.xpYearly = 0);
+            resetDates.yearly = nowISO;
+            changed = true;
+        }
+
+        // Clean up old 'daily' reset entry if it exists
+        if (resetDates.daily !== undefined) {
+            delete resetDates.daily;
+            changed = true;
+        }
+
+
+        if (changed) {
+            saveUsers(users); // Save users with reset XP
+            localStorage.setItem('PoKreGaM_lastResetDates', JSON.stringify(resetDates));
+            console.log('Ranking resets applied.');
+        }
+    }
+
+
+    // --- Render profile ---
+    function renderProfile(user) {
+        if(!user) return;
+        $('profileAvatar').querySelector('img').src = avatars.find(a => a.id === user.avatarId)?.src || '';
+        $('profileAvatar').querySelector('img').alt = user.avatarName || 'User avatar';
+        $('profileUsername').textContent = user.username;
+        $('profileCountry').textContent = user.country;
+        $('profileXP').textContent = user.xp;
+        $('profileFriendsCount').textContent = user.friends?.length || 0;
+        $('profileGold').textContent = user.gold;
+        $('profileLevel').textContent = calculateLevel(user.xp);
+        // Ranking place calculation (uses overall XP for profile header)
+        const users = getUsers().sort((a,b) => b.xp - a.xp);
+        const place = users.findIndex(u => u.username === user.username) + 1;
+        $('profileRankingPlace').textContent = place;
+
+        // Show/hide "Check this" button for guest
+        if (user.username === 'guest') {
+            show($('checkThisBtn'));
+        } else {
+            hide($('checkThisBtn'));
+        }
+    }
+
+    // --- Render ranking table (updated to accept type) ---
+    function renderRankingTable(rankingType = 'overall') { // Default to overall
+        const tbody = $('rankingTable').querySelector('tbody');
+        let users = getUsers();
+        const currentUser = getCurrentUser();
+
+        // Filter for global (by country) ranking
+        if (rankingType === 'global' && currentUser) {
+            users = users.filter(user => user.country === currentUser.country);
+        }
+
+        // Determine which XP field to use for sorting
+        let xpField = 'xp'; // Default to overall XP
+        if (rankingType === 'weekly') xpField = 'xpWeekly';
+        else if (rankingType === 'monthly') xpField = 'xpMonthly';
+        else if (rankingType === 'yearly') xpField = 'xpYearly';
+        // If rankingType is 'overall' or 'global', it already points to 'xp'
+
+        // Sort users by the selected XP field
+        users.sort((a, b) => b[xpField] - a[xpField]);
+
+        tbody.innerHTML = '';
+        users.forEach((u, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${i+1}</td><td>${sanitize(u.username)}</td><td>${u[xpField]}</td><td>${calculateLevel(u[xpField])}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- Render posts ---
+    function renderPosts() {
+        const communityPostsDiv = $('communityPosts');
+        communityPostsDiv.innerHTML = ''; // Clear previous posts
+        const posts = getPosts().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort newest first
+
+        if (posts.length === 0) {
+            communityPostsDiv.innerHTML = '<p style="text-align: center; color: #888;">No posts yet. Be the first to share something!</p>';
+            return;
+        }
+
+        posts.forEach(post => {
+            const postDiv = document.createElement('div');
+            postDiv.classList.add('post');
+
+            const user = getUsers().find(u => u.username === post.username);
+            const avatarSrc = user ? avatars.find(a => a.id === user.avatarId)?.src : '';
+            const avatarAlt = user ? user.avatarName : 'Unknown';
+
+            postDiv.innerHTML = `
+                <div class="post-header">
+                    <div class="post-avatar">
+                        <img src="${avatarSrc}" alt="${avatarAlt}">
+                    </div>
+                    <div class="post-info">
+                        <div class="post-author">${sanitize(post.username)}</div>
+                        <div class="post-time">${new Date(post.timestamp).toLocaleString(currentLang)}</div>
+                    </div>
+                </div>
+                <div class="post-content">${sanitize(post.content)}</div>
+            `;
+            communityPostsDiv.appendChild(postDiv);
+        });
+    }
+
+
+    // --- Clear inputs ---
+    function clearInputs(form) {
+        form.querySelectorAll('input').forEach(i => i.value = '');
+        form.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+        form.querySelectorAll('textarea').forEach(t => t.value = '');
+    }
+
+    // --- Show/hide sections ---
+    function showSection(sectionElement) {
+        // Hide all main sections
+        ['loginSection', 'signUpSection', 'profileSection', 'allChatsSection', 'forgotPasswordSection'].forEach(id => {
+            hide($(id));
+        });
+        // Show the requested section
+        show(sectionElement);
+    }
+
+    // --- Render all chats for guest ---
+    function renderAllChats() {
+        const chatsContent = $('chatsContent');
+        chatsContent.innerHTML = ''; // Clear previous content
+
+        allChats.forEach(chat => {
+            const chatContainer = document.createElement('div');
+            chatContainer.classList.add('chat-container');
+
+            let headerText = '';
+            if (chat.type === 'private') {
+                headerText = `Private Chat (${chat.participants.join(' & ')})`;
+            } else if (chat.type === 'game') {
+                headerText = `Game Chat: ${chat.game}`;
+            }
+
+            const chatHeader = document.createElement('div');
+            chatHeader.classList.add('chat-header');
+            chatHeader.textContent = headerText;
+            chatContainer.appendChild(chatHeader);
+
+            chat.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('chat-message');
+                messageDiv.innerHTML = `[${msg.time}] <strong>${sanitize(msg.sender)}:</strong> ${sanitize(msg.text)}`;
+                chatContainer.appendChild(messageDiv);
+            });
+            chatsContent.appendChild(chatContainer);
+        });
+    }
+
+
+    // --- Selected avatar for signup ---
+    let selectedAvatarId = null;
+
+    // --- Init app ---
+    function init() {
+        // Ensure user data structure is up-to-date and apply resets
+        getUsers(); // This call also updates old user objects
+        handleRankingResets(); // Apply any necessary XP resets based on Kiritimati time
+
+        // Fill avatars
+        renderAvatars();
+
+        // On avatar click
+        $('avatarsContainer').addEventListener('click', e => {
+            let target = e.target;
+            while(target && !target.classList.contains('avatar')) {
+                target = target.parentElement;
+            }
+            if(target) {
+                // Remove previous selection
+                document.querySelectorAll('.avatar.selected').forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                selectedAvatarId = target.dataset.avatarId;
+            }
+        });
+        // Also keyboard select avatar
+        $('avatarsContainer').addEventListener('keydown', e => {
+            if(e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
+
+        // Show login form initially or profile if logged in
+        const currentUser = getCurrentUser();
+        if(currentUser) {
+            showSection($('profileSection'));
+            renderProfile(currentUser);
+            renderRankingTable('overall'); // Render default overall ranking
+        } else {
+            showSection($('loginSection'));
+        }
+
+        // Language selection
+        const langSelector = $('languageSelector');
+        currentLang = langSelector.value;
+        translateUI(currentLang);
+        langSelector.addEventListener('change', () => {
+            currentLang = langSelector.value;
+            translateUI(currentLang);
+        });
+
+        // Navigation tabs for profile section
+        $('tabs').addEventListener('click', e => {
+            if(e.target.tagName !== 'BUTTON') return;
+            const tab = e.target;
+
+            // Handle "Check this" button click (special case)
+            if (tab.id === 'checkThisBtn') {
+                const currentUser = getCurrentUser();
+                if (currentUser && currentUser.username === 'guest') {
+                    showSection($('allChatsSection'));
+                    renderAllChats();
+                }
+                return;
+            }
+
+            const allTabs = Array.from($('tabs').querySelectorAll('button'));
+            const tabContents = Array.from(document.querySelectorAll('section.tabContent'));
+            allTabs.forEach(t => {
+                // Exclude 'Check this' button from tab activation logic
+                if (t.id !== 'checkThisBtn') {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                }
+            });
+            tabContents.forEach(tc => tc.classList.remove('active'));
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+            const targetId = tab.dataset.tab;
+            if(targetId) {
+                $(targetId).classList.add('active');
+                if (targetId === 'rankingTab') {
+                    handleRankingResets(); // Re-check for resets when entering ranking tab
+                    // Default to overall ranking when ranking tab is opened
+                    $('rankingTypeButtons').querySelector('[data-ranking-type="overall"]').click(); // UPDATED
+                }
+                if (targetId === 'postsTab') {
+                    renderPosts();
+                }
+            }
+        });
+
+        // Nav buttons in header (simulate switching main content to profile tabs)
+        $('navGames').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (currentUser) { // Only show profile section if logged in
+                showSection($('profileSection'));
+                activateTab('gamesTab');
+            } else {
+                showSection($('loginSection')); // Redirect to login if not logged in
+            }
+        });
+        $('navMarketplace').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                showSection($('profileSection'));
+                activateTab('marketplaceTab');
+            } else {
+                showSection($('loginSection'));
+            }
+        });
+        $('navBuild').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                showSection($('profileSection'));
+                activateTab('buildTab');
+            } else {
+                showSection($('loginSection'));
+            }
+        });
+        $('navNews').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                showSection($('profileSection'));
+                activateTab('newsTab');
+            } else {
+                showSection($('loginSection'));
+            }
+        });
+        $('navRanking').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                showSection($('profileSection'));
+                activateTab('rankingTab');
+            } else {
+                showSection($('loginSection'));
+            }
+        });
+
+
+        // Activate tab helper
+        function activateTab(id) {
+            const allTabs = Array.from($('tabs').querySelectorAll('button'));
+            const tabContents = Array.from(document.querySelectorAll('section.tabContent'));
+            allTabs.forEach(t => {
+                // Exclude 'Check this' button from tab activation logic
+                if (t.id !== 'checkThisBtn') {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                }
+            });
+            tabContents.forEach(tc => tc.classList.remove('active'));
+            const tab = $(`tabs`).querySelector(`button[data-tab="${id}"]`);
+            if(tab) {
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+            }
+            const content = $(id);
+            if(content) content.classList.add('active');
+
+            // Specific renders for tabs that need it
+            if (id === 'rankingTab') {
+                handleRankingResets(); // Re-check for resets when activating ranking tab
+                // Simulate click on overall ranking by default
+                $('rankingTypeButtons').querySelector('[data-ranking-type="overall"]').click(); // UPDATED
+            } else if (id === 'postsTab') {
+                renderPosts();
+            }
+        }
+
+        // Login / SignUp / Forgot Password toggles
+        $('toSignUp').addEventListener('click', () => {
+            clearInputs($('loginForm'));
+            $('loginError').textContent = ''; // Clear error message
+            showSection($('signUpSection'));
+            selectedAvatarId = null;
+            document.querySelectorAll('.avatar.selected').forEach(el => el.classList.remove('selected'));
+        });
+        $('toLogin').addEventListener('click', () => {
+            clearInputs($('signUpForm'));
+            $('signUpError').textContent = ''; // Clear error message
+            showSection($('loginSection'));
+        });
+        $('forgotPasswordLink').addEventListener('click', () => {
+            clearInputs($('loginForm'));
+            $('loginError').textContent = ''; // Clear login error
+            $('forgotPasswordMessage').textContent = ''; // Clear recovery message
+            $('forgotPasswordError').textContent = ''; // Clear recovery error
+            showSection($('forgotPasswordSection'));
+        });
+        $('backToLoginFromForgot').addEventListener('click', () => {
+            clearInputs($('forgotPasswordForm'));
+            $('forgotPasswordMessage').textContent = ''; // Clear recovery message
+            $('forgotPasswordError').textContent = ''; // Clear recovery error
+            showSection($('loginSection'));
+        });
+
+
+        // Login form submit
+        $('loginForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const username = sanitize($('loginUsername').value.trim());
+            const password = $('loginPassword').value;
+            const users = getUsers();
+            const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+
+            if(user && user.password === password) {
+                setCurrentUser(user.username);
+                renderProfile(user);
+                showSection($('profileSection'));
+                $('loginError').textContent = '';
+                clearInputs($('loginForm'));
+                activateTab('gamesTab'); // Activate default tab
+            } else {
+                $('loginError').textContent = LANG[currentLang].loginError;
+            }
+        });
+
+        // Signup form submit
+        $('signUpForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const username = sanitize($('signUpUsername').value.trim());
+            const email = sanitize($('signUpEmail').value.trim());
+            const country = $('signUpCountry').value;
+            const password = $('signUpPassword').value;
+            const birthdate = $('signUpBirthdate').value;
+
+            if(!username || !country || !password || !birthdate || !selectedAvatarId) {
+                $('signUpError').textContent = LANG[currentLang].signUpError;
+                return;
+            }
+            // Check if username exists
+            const users = getUsers();
+            if(users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                $('signUpError').textContent = 'Username already exists.';
+                return;
+            }
+            // Create new user object
+            const avatar = avatars.find(a => a.id === selectedAvatarId);
+            const newUser = {
+                username,
+                email,
+                country,
+                password,
+                birthdate,
+                avatarId: avatar.id,
+                avatarName: avatar.name,
+                xp: 0,
+                // Removed xpDaily as it's no longer used
+                xpWeekly: 0,
+                xpMonthly: 0,
+                xpYearly: 0,
+                gold: 100,
+                friends: [],
+                // Initialize last reset dates to current time in Kiritimati (excluding daily)
+                lastWeeklyReset: getKiritimatiDate().toISOString(),
+                lastMonthlyReset: getKiritimatiDate().toISOString(),
+                lastYearlyReset: getKiritimatiDate().toISOString(),
+            };
+            users.push(newUser);
+            saveUsers(users);
+            setCurrentUser(username);
+            renderProfile(newUser);
+            showSection($('profileSection'));
+            clearInputs($('signUpForm'));
+            selectedAvatarId = null;
+            document.querySelectorAll('.avatar.selected').forEach(el => el.classList.remove('selected'));
+            $('signUpError').textContent = '';
+            activateTab('gamesTab'); // Activate default tab
+        });
+
+        // Forgot password form submit
+        $('forgotPasswordForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const email = sanitize($('forgotPasswordEmail').value.trim());
+            const users = getUsers();
+            const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.email !== '');
+
+            $('forgotPasswordMessage').textContent = '';
+            $('forgotPasswordError').textContent = '';
+
+            if (user) {
+                const message = LANG[currentLang].recoveryEmailSent
+                    .replace('{username}', user.username)
+                    .replace('{password}', user.password);
+                $('forgotPasswordMessage').textContent = message;
+                clearInputs($('forgotPasswordForm'));
+            } else {
+                $('forgotPasswordError').textContent = LANG[currentLang].recoveryEmailNotFound;
+            }
+        });
+
+        // Publish Post button
+        $('publishPostBtn').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                alert('You must be logged in to post.');
+                return;
+            }
+
+            const postContent = $('postContent').value.trim();
+            if (postContent === '') {
+                $('postMessage').style.color = 'red';
+                $('postMessage').textContent = LANG[currentLang].postEmpty;
+                return;
+            }
+
+            const posts = getPosts();
+            const newPost = {
+                username: currentUser.username,
+                content: postContent,
+                timestamp: new Date().toISOString(),
+            };
+            posts.push(newPost);
+            savePosts(posts);
+
+            $('postContent').value = '';
+            $('postMessage').style.color = 'green';
+            $('postMessage').textContent = LANG[currentLang].postPublished;
+
+            renderPosts();
+
+            setTimeout(() => {
+                $('postMessage').textContent = '';
+            }, 3000);
+        });
+
+        // Ranking type buttons listener (UPDATED)
+        $('rankingTypeButtons').addEventListener('click', e => {
+            if (e.target.tagName === 'BUTTON') {
+                const type = e.target.dataset.rankingType;
+                if (type) {
+                    // Deactivate all ranking type buttons
+                    $('rankingTypeButtons').querySelectorAll('button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Activate the clicked button
+                    e.target.classList.add('active');
+                    // Render the table with the selected type
+                    renderRankingTable(type);
+                }
+            }
+        });
+
+
+        // Logout
+        $('btnLogout').addEventListener('click', () => {
+            setCurrentUser(null);
+            showSection($('loginSection'));
+            hide($('checkThisBtn'));
+        });
+
+        // Start New Game button (simulates XP gain for various rankings)
+        $('startGameBtn').addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                const xpGain = 10;
+                currentUser.xp += xpGain; // Overall XP (always increases)
+                // Removed xpDaily as it's no longer used
+                currentUser.xpWeekly += xpGain;
+                currentUser.xpMonthly += xpGain;
+                currentUser.xpYearly += xpGain;
+
+                saveUsers(getUsers().map(u => u.username === currentUser.username ? currentUser : u));
+                renderProfile(currentUser); // Update profile stats
+
+                // If currently on ranking tab, update it
+                if ($('rankingTab').classList.contains('active')) {
+                    const activeRankingButton = $('rankingTypeButtons').querySelector('.active');
+                    if (activeRankingButton) {
+                        renderRankingTable(activeRankingButton.dataset.rankingType);
+                    }
+                }
+                alert(`You gained ${xpGain} XP! Your total XP is ${currentUser.xp}.`);
+            } else {
+                alert('Please log in to start a new game and gain XP.');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
